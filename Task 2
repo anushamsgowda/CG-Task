@@ -1,0 +1,94 @@
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@SpringBootApplication
+@RestController
+@RequestMapping("/books")
+public class LibrarySystemAPI {
+
+    private Map<Integer, Book> books = new HashMap<>();
+    private int nextId = 1;
+
+    @PostMapping
+    public ResponseEntity<Book> createBook(@RequestBody Book book) {
+        // Validate input
+        if (book.getTitle() == null || book.getTitle().isEmpty() ||
+                book.getAuthor() == null || book.getAuthor().isEmpty() ||
+                book.getIsbn() == null || book.getIsbn().isEmpty() ||
+                book.getGenre() == null || book.getGenre().isEmpty() ||
+                book.getPublicationYear() == null || book.getPublicationYear() <= 0) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        book.setId(nextId++);
+        books.put(book.getId(), book);
+        return ResponseEntity.status(HttpStatus.CREATED).body(book);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Book>> getAllBooks() {
+        return ResponseEntity.ok(new ArrayList<>(books.values()));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Book> getBookById(@PathVariable int id) {
+        Book book = books.get(id);
+        if (book == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(book);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Book> updateBook(@PathVariable int id, @RequestBody Book updatedBook) {
+        Book book = books.get(id);
+        if (book == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Validate input
+        if (updatedBook.getTitle() == null || updatedBook.getTitle().isEmpty() ||
+                updatedBook.getAuthor() == null || updatedBook.getAuthor().isEmpty() ||
+                updatedBook.getIsbn() == null || updatedBook.getIsbn().isEmpty() ||
+                updatedBook.getGenre() == null || updatedBook.getGenre().isEmpty() ||
+                updatedBook.getPublicationYear() == null || updatedBook.getPublicationYear() <= 0) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        updatedBook.setId(id);
+        books.put(id, updatedBook);
+        return ResponseEntity.ok(updatedBook);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteBook(@PathVariable int id) {
+        if (!books.containsKey(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        books.remove(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(LibrarySystemAPI.class, args);
+    }
+}
+
+class Book {
+    private int id;
+    private String title;
+    private String author;
+    private String isbn;
+    private String genre;
+    private int publicationYear;
+
+    // Getters and setters
+}
